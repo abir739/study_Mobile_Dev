@@ -9,10 +9,10 @@ import 'package:notes_flutter_app/models/task_model.dart';
 class NoteEditor extends StatefulWidget {
   final Note? note;
 
-  NoteEditor({this.note});
+  const NoteEditor({super.key, this.note});
 
   @override
-  _NoteEditorState createState() => _NoteEditorState();
+  State<NoteEditor> createState() => _NoteEditorState();
 }
 
 class _NoteEditorState extends State<NoteEditor> {
@@ -24,7 +24,7 @@ class _NoteEditorState extends State<NoteEditor> {
   String? _imagePath;
   List<Category> _categories = [];
   Category? _selectedCategory;
-  Color _selectedColor = Colors.white; // Default color
+  Color _selectedColor = Colors.white;
   List<Task> _tasks = [];
   DateTime? _reminder;
 
@@ -103,7 +103,6 @@ class _NoteEditorState extends State<NoteEditor> {
                 _selectedColor = color;
               });
             },
-            showLabel: true,
             pickerAreaHeightPercent: 0.8,
           ),
         ),
@@ -197,7 +196,11 @@ class _NoteEditorState extends State<NoteEditor> {
                       child: _buildTextField(_contentController, 'Content',
                           'Please enter some content'),
                     ),
-
+                    // Task Input & List
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _buildTaskInput(),
+                    ),
                     // Category Tags
                     Padding(
                       padding: const EdgeInsets.only(top: 10.0),
@@ -208,12 +211,6 @@ class _NoteEditorState extends State<NoteEditor> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: _buildActionButtonsRow(),
-                    ),
-
-                    // Task Input & List
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: _buildTaskInput(),
                     ),
                   ],
                 ),
@@ -263,8 +260,9 @@ class _NoteEditorState extends State<NoteEditor> {
               ),
             ),
 
-          // Category selection
+          // Category selection: display list of categories and create new category
           Wrap(
+            direction: Axis.horizontal,
             spacing: 8.0,
             runSpacing: 4.0,
             children: _categories.map((category) {

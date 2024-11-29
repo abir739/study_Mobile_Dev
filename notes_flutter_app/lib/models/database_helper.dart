@@ -96,12 +96,14 @@ class DatabaseHelper {
     return await db!.insert('notes', row);
   }
 
-
-
-  Future<int> updateNote(Map<String, dynamic> row) async {
+  Future<int> updateNote(Map<String, dynamic> note) async {
     final db = await database;
-    int id = row['id'];
-    return await db!.update('notes', row, where: 'id = ?', whereArgs: [id]);
+    return await db!.update(
+      'notes',
+      note,
+      where: 'id = ?',
+      whereArgs: [note['id']],
+    );
   }
 
   Future<int> deleteNote(int id) async {
@@ -131,7 +133,7 @@ class DatabaseHelper {
     return await db!.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 
-    Future<List<Map<String, dynamic>>> queryAllNotes() async {
+  Future<List<Map<String, dynamic>>> queryAllNotes() async {
     final db = await database;
     return await db!.rawQuery('''
       SELECT notes.*, categories.name AS category_name

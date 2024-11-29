@@ -32,10 +32,25 @@ class _NotesPageState extends State<NotesPage> {
   Future<void> _addNote() async {
     final note = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => NoteEditor()),
+      MaterialPageRoute(builder: (context) => const NoteEditor()),
     );
     if (note != null) {
       await _dbHelper.insertNote(note.toMap());
+      _loadNotes();
+    }
+  }
+
+  Future<void> _editNote(Note note) async {
+    final updatedNote = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NoteEditor(note: note),
+      ),
+    );
+
+    if (updatedNote != null) {
+      // Update the note in the database
+      await _dbHelper.updateNote(updatedNote.toMap());
       _loadNotes();
     }
   }
@@ -90,7 +105,10 @@ class _NotesPageState extends State<NotesPage> {
                   final note = filteredNotes[index];
                   return Dismissible(
                     key: Key(note.id.toString()),
-                    background: Container(color: Colors.red),
+                    background: Container(
+                      color: Colors.red,
+                      child: const Icon(Icons.delete),
+                    ),
                     onDismissed: (direction) {
                       _deleteNote(note.id!);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,6 +129,10 @@ class _NotesPageState extends State<NotesPage> {
                           subtitle: Text(note.content.length > 30
                               ? '${note.content.substring(0, 30)}...'
                               : note.content),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => _editNote(note),
+                          ),
                           children: [
                             if (note.imagePath != null)
                               Image.file(File(note.imagePath!),
@@ -127,8 +149,7 @@ class _NotesPageState extends State<NotesPage> {
                                               )),
                                           leading: Checkbox(
                                               value: task.isCompleted,
-                                              onChanged:
-                                                  null), // Disable checkbox
+                                              onChanged: null),
                                         ))
                                     .toList(),
                               ),
