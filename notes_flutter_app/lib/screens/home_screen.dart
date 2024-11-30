@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:notes_flutter_app/models/database_helper.dart';
 import 'package:notes_flutter_app/models/note_model.dart';
 import 'package:notes_flutter_app/screens/add_note_screen.dart';
+import 'package:notes_flutter_app/screens/note_detail_screen.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -49,7 +50,6 @@ class _NotesPageState extends State<NotesPage> {
     );
 
     if (updatedNote != null) {
-      // Update the note in the database
       await _dbHelper.updateNote(updatedNote.toMap());
       _loadNotes();
     }
@@ -66,6 +66,52 @@ class _NotesPageState extends State<NotesPage> {
     });
   }
 
+  void _showNoteOptions(Note note) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editNote(note);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Delete'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteNote(note.id!);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Note deleted')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.visibility),
+                title: const Text('See Details'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NoteDetailScreen(note: note),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredNotes = _notes
@@ -76,7 +122,7 @@ class _NotesPageState extends State<NotesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('My Notes')),
+        title: const Text('My Notes'),
         elevation: 0,
         backgroundColor: Colors.blueGrey,
         bottom: PreferredSize(
@@ -85,11 +131,14 @@ class _NotesPageState extends State<NotesPage> {
             padding: const EdgeInsets.symmetric(horizontal: 25.0),
             child: TextField(
               onChanged: _onSearchChanged,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search notes...',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20.0),
               ),
             ),
           ),
@@ -103,72 +152,74 @@ class _NotesPageState extends State<NotesPage> {
                 itemCount: filteredNotes.length,
                 itemBuilder: (context, index) {
                   final note = filteredNotes[index];
-                  return Dismissible(
-                    key: Key(note.id.toString()),
-                    background: Container(
-                      color: Colors.red,
-                      child: const Icon(Icons.delete),
+                  return Card(
+                    color: note.color,
+                    margin: const EdgeInsets.all(8.0),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
                     ),
-                    onDismissed: (direction) {
-                      _deleteNote(note.id!);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Note deleted')));
-                    },
-                    child: Card(
-                      color: note.color,
-                      margin: const EdgeInsets.all(8.0),
-                      elevation: 4,
-                      child: GestureDetector(
-                        onTap: () {
-                          // Navigate to note detail or edit screen
-                        },
-                        child: ExpansionTile(
-                          title: Text(note.title,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(note.content.length > 30
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(note.title,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18)),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.more_vert),
+                                onPressed: () => _showNoteOptions(note),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(note.content.length > 30
                               ? '${note.content.substring(0, 30)}...'
                               : note.content),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () => _editNote(note),
-                          ),
-                          children: [
-                            if (note.imagePath != null)
-                              Image.file(File(note.imagePath!),
+                          if (note.imagePath != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Image.file(File(note.imagePath!),
                                   height: 100, fit: BoxFit.cover),
-                            if (note.tasks.isNotEmpty)
-                              Column(
-                                children: note.tasks
-                                    .map((task) => ListTile(
-                                          title: Text(task.description,
-                                              style: TextStyle(
-                                                decoration: task.isCompleted
-                                                    ? TextDecoration.lineThrough
-                                                    : TextDecoration.none,
-                                              )),
-                                          leading: Checkbox(
-                                              value: task.isCompleted,
-                                              onChanged: null),
-                                        ))
-                                    .toList(),
+                            ),
+                          if (note.tasks.isNotEmpty)
+                            Column(
+                              children: note.tasks
+                                  .map((task) => ListTile(
+                                        title: Text(task.description,
+                                            style: TextStyle(
+                                              decoration: task.isCompleted
+                                                  ? TextDecoration.lineThrough
+                                                  : TextDecoration.none,
+                                            )),
+                                        leading: Checkbox(
+                                            value: task.isCompleted,
+                                            onChanged: null),
+                                      ))
+                                  .toList(),
+                            ),
+                          if (note.reminder != null)
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.alarm,
+                                      color: Colors.orange, size: 20),
+                                  const SizedBox(width: 5),
+                                  Text('Reminder: ${note.reminder!.toString()}',
+                                      style: const TextStyle(fontSize: 14)),
+                                ],
                               ),
-                            if (note.reminder != null)
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.alarm,
-                                        color: Colors.orange, size: 20),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                        'Reminder: ${note.reminder!.toString()}',
-                                        style: const TextStyle(fontSize: 14)),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     ),
                   );
