@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:notes_flutter_app/models/database_helper.dart';
 import 'package:notes_flutter_app/models/note_model.dart';
 
@@ -15,6 +16,11 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   late Note _note;
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    return DateFormat('EEEE d, MMM, yyyy HH:mm').format(date);
+  }
 
   @override
   void initState() {
@@ -39,14 +45,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.note.title),
+        title: Center(child: Text(widget.note.title)),
         backgroundColor: Colors.blueGrey,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(25.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(
+              height: 18,
+            ),
+            const Text(
+              'Description:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
             Text(
               widget.note.content,
               style: const TextStyle(fontSize: 16),
@@ -55,7 +69,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             if (widget.note.imagePath != null)
               Image.file(
                 File(widget.note.imagePath!),
-                height: 200,
+                height: 300,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
@@ -84,17 +98,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         onChanged: (_) => _toggleTaskCompletion(index),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             const SizedBox(height: 16),
             if (widget.note.reminder != null)
               Row(
                 children: [
-                  const Icon(Icons.alarm, color: Colors.orange, size: 20),
+                  const Icon(Icons.alarm, color: Colors.orange, size: 25),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Reminder:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(width: 8),
                   Text(
-                    'Reminder: ${widget.note.reminder!.toString()}',
+                    ' ${_formatDate(widget.note.reminder)}',
                     style: const TextStyle(fontSize: 16),
                   ),
                 ],

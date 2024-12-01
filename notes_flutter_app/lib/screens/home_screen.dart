@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:notes_flutter_app/models/database_helper.dart';
 import 'package:notes_flutter_app/models/note_model.dart';
 import 'package:notes_flutter_app/screens/add_note_screen.dart';
@@ -16,6 +17,11 @@ class _NotesPageState extends State<NotesPage> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Note> _notes = [];
   String _searchQuery = '';
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    return DateFormat('EEEE d, MMM, yyyy HH:mm').format(date);
+  }
 
   @override
   void initState() {
@@ -200,8 +206,12 @@ class _NotesPageState extends State<NotesPage> {
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Image.file(File(note.imagePath!),
-                                  height: 100, fit: BoxFit.cover),
+                              child: Image.file(
+                                File(note.imagePath!),
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           if (note.tasks.isNotEmpty)
                             ExpansionTile(
@@ -231,7 +241,8 @@ class _NotesPageState extends State<NotesPage> {
                                   const Icon(Icons.alarm,
                                       color: Colors.orange, size: 20),
                                   const SizedBox(width: 5),
-                                  Text('Reminder: ${note.reminder!.toString()}',
+                                  Text(
+                                      'Reminder: ${_formatDate(note.reminder)}',
                                       style: const TextStyle(fontSize: 14)),
                                 ],
                               ),
