@@ -68,6 +68,8 @@ class _NotesPageState extends State<NotesPage> {
 
   void _showNoteOptions(Note note) {
     showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       context: context,
       builder: (context) {
         return SafeArea(
@@ -110,6 +112,17 @@ class _NotesPageState extends State<NotesPage> {
         );
       },
     );
+  }
+
+  void _toggleTaskCompletion(Note note, int index) {
+    setState(() {
+      note.tasks[index].isCompleted = !note.tasks[index].isCompleted;
+    });
+    _updateNoteInDatabase(note);
+  }
+
+  Future<void> _updateNoteInDatabase(Note note) async {
+    await _dbHelper.updateNote(note.toMap());
   }
 
   @override
@@ -191,20 +204,24 @@ class _NotesPageState extends State<NotesPage> {
                                   height: 100, fit: BoxFit.cover),
                             ),
                           if (note.tasks.isNotEmpty)
-                            Column(
-                              children: note.tasks
-                                  .map((task) => ListTile(
-                                        title: Text(task.description,
-                                            style: TextStyle(
-                                              decoration: task.isCompleted
-                                                  ? TextDecoration.lineThrough
-                                                  : TextDecoration.none,
-                                            )),
-                                        leading: Checkbox(
-                                            value: task.isCompleted,
-                                            onChanged: null),
-                                      ))
-                                  .toList(),
+                            ExpansionTile(
+                              title: const Text('Tasks'),
+                              children: note.tasks.asMap().entries.map((e) {
+                                int index = e.key;
+                                var task = e.value;
+                                return ListTile(
+                                  title: Text(task.description,
+                                      style: TextStyle(
+                                        decoration: task.isCompleted
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                      )),
+                                  leading: Checkbox(
+                                      value: task.isCompleted,
+                                      onChanged: (_) =>
+                                          _toggleTaskCompletion(note, index)),
+                                );
+                              }).toList(),
                             ),
                           if (note.reminder != null)
                             Padding(
